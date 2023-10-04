@@ -14,7 +14,7 @@ from sklearn.preprocessing import StandardScaler
 
 print(tf.__version__)
 
-def getData(x = 20, y = 10) :
+def getData(x, y) :
     data = []
     i = random.randint(0,9)
     # i = 2
@@ -25,33 +25,44 @@ def getData(x = 20, y = 10) :
     for x_i in range (x) :
         y_i = i % y
         y_j = j + (i % 2)
-        # y_g = g + (i % 2)
+        y_g = g + (i % 2)
         buffer = y*[0]
-        # buffer[y_i] = 1
-        buffer[y_j] += 3
-        # buffer[y_g] += m:
+        buffer[y_i] = 1
+        buffer[y_j] = 3
+        buffer[y_g] = m
         data.append(buffer)
         i += 1
-    # print(data)
-    return data
+    
+    return data[:-1], data[-1]
 
 
 data_size = 10000
-pourcentage_train_set = 0.8
+pourcentage_data_train = 0.8
 
 scaler = StandardScaler()
-train_set = [] 
-data_set = [] 
-for i in range (int(data_size * pourcentage_train_set)) :
-    train_set.append(getData(28,28))
-for i in range (int(data_size * (1 - pourcentage_train_set))) :
-    data_set.append(getData(28,28))
+data_train = [] 
+data_test = [] 
 
-train_set = np.array(train_set)
-data_set = np.array(data_set)
+target_train = [] 
+target_test = [] 
+
+for i in range (int(data_size * pourcentage_data_train)) :
+    res = getData(29,28)
+    data_train.append(res[0])
+    target_train.append(res[1])
+
+for i in range (int(data_size * (1 - pourcentage_data_train))) :
+    res = getData(29,28)
+    data_test.append(res[0])
+    target_test.append(res[1])
+
+data_train = np.array(data_train)
+data_test = np.array(data_test)
+target_train = np.array(target_train)
+target_test = np.array(target_test)
 
 
-latent_dim = 10
+latent_dim = 28
 
 # Encodeur
 inputs = keras.Input(shape=(28, 28))
@@ -62,25 +73,13 @@ x = layers.Dense(64, activation="sigmoid")(x)
 x = layers.Dense(latent_dim, activation="sigmoid")(x)  
 encoder = keras.Model(inputs, x, name="encoder")
 
-# Décodeur
-latent_inputs = keras.Input(shape=(latent_dim,))
-x = layers.Dense(64, activation="sigmoid")(latent_inputs)
-x = layers.Dense(128, activation="sigmoid")(x)
-x = layers.Dense(256, activation="sigmoid")(x)
-x = layers.Dense(28 * 28, activation="sigmoid")(x) 
-outputs = layers.Reshape((28, 28))(x)
-
-
-decoder = keras.Model(latent_inputs, outputs, name = "decoder")
-
 # decoder.summary()
 
 inputs = keras.Input(shape=(28,28))
 
 latents = encoder(inputs)
-outputs = decoder(latents)
 
-ae = keras.Model(inputs,outputs,name="ae")
+ae = keras.Model(inputs,latents,name="ae")
 
 ae.compile(optimizer="adam", loss ='mse',metrics =["accuracy"])
 # ae.compile(optimizer="adam", loss ='binary_crossentropy',metrics =["accuracy"])
@@ -90,12 +89,12 @@ callback_bestmodel = tf.keras.callbacks.ModelCheckpoint(filepath='/models/best_m
 
 
 batch_size = 128
-epochs = 500
-history = ae.fit(train_set, train_set,
+epochs = 300
+history = ae.fit(data_train, target_train,
                  batch_size = batch_size,
                  epochs = epochs,
                  verbose = 1,
-                 validation_data = (data_set, data_set),
+                 validation_data = (data_test, target_test),
                  callbacks = callback_bestmodel
                  )
 
@@ -119,12 +118,18 @@ plt.title("Acc")
 plt.show()
 
 
-# Ensuite, vous pouvez passer l'image redimensionnée à votre modèle
-print(data_set[0].reshape(1,28,28))
-res = ae.predict(data_set[0].reshape(1,28,28))
-res = res[0]
-plt.imshow(data_set[0:1][0])
-plt.show()
 
-plt.imshow(res)
+# Ensuite, vous pouvez passer l'image redimensionnée à votre modèle
+print(data_test[0].reshape(1,28,28))
+res = ae.predict(data_test[0].reshape(1,28,28))
+res = res[0]
+
+plt.subplot(2, 1, 1)  # 2 lignes, 1 colonne, première sous-fenêtre
+plt.imshow(data_test[0:1][0])
+# plt.show()
+
+plt.subplot(2, 1, 2)  # 2 lignes, 1 colonne, première sous-fenêtre
+plt.imshow(res.reshape(1,28))
+
+plt.tight_layout()  # Pour éviter que les titres se chevauchent
 plt.show()
