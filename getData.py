@@ -11,8 +11,58 @@ import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras import layers
 from sklearn.preprocessing import StandardScaler
+from scipy.io import wavfile
+import os
 
-print(tf.__version__)
+# def getMusiqueArray() :
+
+#     current_directory = os.getcwd()
+
+#     file_name = "feather.wav"
+
+#     relative_path = os.path.join(current_directory, file_name)
+
+#     # Charger le fichier audio (assurez-vous qu'il est au format WAV ou convertissez-le)
+#     sample_rate, audio_data = wavfile.read(relative_path)
+
+#     # Définir la durée de chaque segment en millisecondes
+#     segment_duration_ms = 1  # Par exemple, 1 milliseconde
+
+#     # Convertir la durée du segment en nombre d'échantillons
+#     segment_duration_samples = int(segment_duration_ms * sample_rate / 1000)
+
+#     # Calculer combien de segments peuvent être extraits
+#     num_segments = len(audio_data) // segment_duration_samples
+
+#     # Découper l'audio en segments de même taille
+#     segments = np.array_split(audio_data[:num_segments * segment_duration_samples], num_segments)
+
+#     # Initialiser une liste pour stocker les fréquences pour chaque segment
+#     frequencies_per_segment = []
+
+#     # Calculer les fréquences pour chaque segment
+#     for segment in segments:
+#         frequencies = np.fft.fft(segment)
+#         frequencies_per_segment.append(frequencies)
+
+#     # Initialiser une liste pour stocker les fréquences mono
+#     frequencies_mono = []
+
+#     # Parcourir tous les segments
+#     for segment in frequencies_per_segment:
+#         # Moyenne des canaux gauche et droit pour obtenir un canal mono
+#         mono_segment = (segment[:, 0] + segment[:, 1]) / 2
+#         frequencies_mono.append(mono_segment)
+
+#     print(frequencies_mono)
+#     frequencies_mono = np.array(frequencies_mono)
+#     print(frequencies_mono.shape)
+#     exit()
+#     return frequencies_mono
+
+
+# getMusiqueArray()
+
 
 def getData(x, y) :
     data = []
