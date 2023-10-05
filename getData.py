@@ -77,39 +77,52 @@ def getData(x, y) :
         y_j = j + (i % 2)
         y_g = g + (i % 2)
         buffer = y*[0]
-        buffer[y_i] = 1
-        buffer[y_j] = 3
-        buffer[y_g] = m
+        buffer[y_i] = 0.5
+        # buffer[y_j] = 3
+        # buffer[y_g] = m
         data.append(buffer)
         i += 1
     
     return data[:-1], data[-1]
 
 
-data_size = 10000
-pourcentage_data_train = 0.8
+data_size = 1000
+pourcentage_data_train = 0.7
+pourcentage_data_test = 0.2
+pourcentage_data_evaluate = 0.2
+batch_size = 128
+epochs = 100
 
 scaler = StandardScaler()
 data_train = [] 
 data_test = [] 
+data_evaluate = [] 
 
 target_train = [] 
 target_test = [] 
+target_evaluate = [] 
 
 for i in range (int(data_size * pourcentage_data_train)) :
     res = getData(29,28)
     data_train.append(res[0])
     target_train.append(res[1])
 
-for i in range (int(data_size * (1 - pourcentage_data_train))) :
+for i in range (int(data_size * pourcentage_data_test)) :
     res = getData(29,28)
     data_test.append(res[0])
     target_test.append(res[1])
 
+for i in range (int(data_size * pourcentage_data_evaluate)) :
+    res = getData(29,28)
+    data_evaluate.append(res[0])
+    target_evaluate.append(res[1])
+
 data_train = np.array(data_train)
 data_test = np.array(data_test)
+data_evaluate = np.array(data_evaluate)
 target_train = np.array(target_train)
 target_test = np.array(target_test)
+target_evaluate = np.array(target_evaluate)
 
 
 latent_dim = 28
@@ -138,8 +151,7 @@ callback_bestmodel = tf.keras.callbacks.ModelCheckpoint(filepath='/models/best_m
                                                         verbose = 0, save_best_only=True)
 
 
-batch_size = 128
-epochs = 300
+
 history = ae.fit(data_train, target_train,
                  batch_size = batch_size,
                  epochs = epochs,
@@ -180,6 +192,26 @@ plt.imshow(data_test[0:1][0])
 
 plt.subplot(2, 1, 2)  # 2 lignes, 1 colonne, première sous-fenêtre
 plt.imshow(res.reshape(1,28))
+
+
+res = ae.predict(data_evaluate)
+
+print(res.shape)
+print(target_evaluate.shape)
+
+print("------------")
+print(res[0])
+print(target_evaluate[0])
+
+'''
+marche pas mais normal, normalisé les resultat de prediction, pas de dfloat a la con, mais regarder vidéo playlist pour checker
+comment faire pour que neuronne ressorte int genre porucen,tage
+'''
+confusion_matirx = tf.math.confusion_matrix(
+    labels = target_evaluate,
+    predictions = res
+    )
+print(confusion_matirx)
 
 plt.tight_layout()  # Pour éviter que les titres se chevauchent
 plt.show()
