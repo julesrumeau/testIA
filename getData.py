@@ -10,7 +10,7 @@ import tensorflow as tf
 
 from tensorflow import keras
 from tensorflow.keras import layers
-from sklearn.preprocessing import StandardScaler
+# from sklearn.preprocessing import StandardScaler
 from scipy.io import wavfile
 import os
 
@@ -93,7 +93,7 @@ pourcentage_data_evaluate = 0.2
 batch_size = 128
 epochs = 100
 
-scaler = StandardScaler()
+# scaler = StandardScaler()
 data_train = [] 
 data_test = [] 
 data_evaluate = [] 
@@ -196,6 +196,10 @@ plt.imshow(res.reshape(1,28))
 
 res = ae.predict(data_evaluate)
 
+res = np.array(res)
+target_evaluate = target_evaluate.astype(np.float32)
+res = res.astype(np.float32)
+
 print(res.shape)
 print(target_evaluate.shape)
 
@@ -203,15 +207,32 @@ print("------------")
 print(res[0])
 print(target_evaluate[0])
 
+plt.tight_layout()  # Pour éviter que les titres se chevauchent
+plt.show()
+
+
 '''
 marche pas mais normal, normalisé les resultat de prediction, pas de dfloat a la con, mais regarder vidéo playlist pour checker
 comment faire pour que neuronne ressorte int genre porucen,tage
 '''
-confusion_matirx = tf.math.confusion_matrix(
-    labels = target_evaluate,
-    predictions = res
-    )
-print(confusion_matirx)
+# confusion_matirx = tf.math.confusion_matrix(
+#     labels = target_evaluate[0:2],
+#     predictions = res[0:2],
+#     num_classes=2
+#     )
+# print(confusion_matirx)
 
-plt.tight_layout()  # Pour éviter que les titres se chevauchent
-plt.show()
+
+# # Exemple de données de prédiction et de vérité terrain (à adapter à vos données)
+# predictions = np.array([0, 1, 1, 0, 1, 0, 0, 1, 1, 0.7])  # Exemple de prédictions binaires (0 ou 1)
+# ground_truth = np.array([0, 1, 0, 0, 1, 1, 0, 1, 0.5, 1])  # Exemple d'étiquettes de vérité terrain (0 ou 1)
+
+# # Assurez-vous que les données sont de type int32
+# predictions = predictions.astype(np.int32)
+# ground_truth = ground_truth.astype(np.int32)
+
+# # Utilisez la fonction tf.math.confusion_matrix
+# confusion_matrix = tf.math.confusion_matrix(ground_truth, predictions, num_classes=2)
+
+# print(confusion_matrix)
+
