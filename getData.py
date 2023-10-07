@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import random
+import yfinance as yf
+
 # Make NumPy printouts easier to read.
 np.set_printoptions(precision=3, suppress=True)
 
@@ -63,59 +65,129 @@ import os
 
 # getMusiqueArray()
 
-
-def getData(x, y) :
-    data = []
-    i = random.randint(0,9)
-    # i = 2
-    j = random.randint(0,8)
-    g = random.randint(0,8)
-    k = random.randint(0,10)
-    m = random.randint(0,22)
-    for x_i in range (x) :
-        y_i = i % y
-        y_j = j + (i % 2)
-        y_g = g + (i % 2)
-        buffer = y*[0]
-        buffer[y_i] = 0.5
-        # buffer[y_j] = 3
-        # buffer[y_g] = m
-        data.append(buffer)
-        i += 1
-    
-    return data[:-1], data[-1]
-
-
+size_past = 60
 data_size = 1000
-pourcentage_data_train = 0.7
-pourcentage_data_test = 0.2
-pourcentage_data_evaluate = 0.2
+pourcentage_data_train =  0.7
+pourcentage_data_test =  0.2
+pourcentage_data_evaluate =  0.1
+
+
 batch_size = 128
-epochs = 100
+epochs = 5000
+
+# Définissez la date de début et la date de fin pour la période de 30 ans
+debut = "1993-01-01"
+fin = "2023-01-01"
+
+# Utilisez la fonction Ticker pour obtenir les données du CAC 40 depuis Yahoo Finance
+cac40 = yf.Ticker("^FCHI")
+
+# Obtenez les données historiques
+donnees_cac40 = cac40.history(period="30y", start=debut, end=fin)
+
+donnees_cac40 = donnees_cac40["Open"]
+donnees_cac40 = np.array(donnees_cac40)
+
+mean_de_base = donnees_cac40.mean()
+std_de_base = donnees_cac40.std()
+donnees_de_base = donnees_cac40
+
+donnees_cac40 = [(x - mean_de_base) / std_de_base for x in donnees_cac40]
+
+donnes_retrouver = [(x * std_de_base) + mean_de_base for x in donnees_cac40]
+
+
+
+# Affichez les premières lignes des données
+nbr_data_total = len(donnees_cac40)
+print(nbr_data_total)
+
+data = [donnees_cac40[i:i+size_past + 1] for i in range(0, len(donnees_cac40), size_past)]
+data = data[:-1]
+
+nbr_data_paquet = len(data)
+print(nbr_data_paquet)
+
+target = []
+for x in data :
+    target.append(x[-1])
+    x.pop(size_past-1)
+
+data = np.array(data)
+target = np.array(target)
+
+print(data.shape)
+print(target.shape)
+
+print("------------")
+
+# def getData(taille) :
+#     data = []
+
+#     # exit()
+#     train = data[:-1]
+#     nMoins1 = data[-1]
+   
+#     return train, nMoins1
+
+# def getData(x) :
+#     data = []
+#     for x_i in range (x) :
+#         i = 2 * x_i**2 + 8 * random.random()
+#         data.append(i)
+
+
+#     data = np.array(data)
+#     data = [(x - data.mean()) / data.std() for x in data]
+
+#     # print(data)
+#     train = data[:-1]
+#     nMoins1 = data[-1]
+#     nMoins2 = train[-1]
+
+#     # print(nMoins1)
+
+#     # print(train)
+#     # diff = (nMoins2 - nMoins1) / nMoins2 
+#     #train / target
+#     return train, nMoins1
+
 
 # scaler = StandardScaler()
-data_train = [] 
-data_test = [] 
-data_evaluate = [] 
+taille_data_train = int(nbr_data_paquet * pourcentage_data_train)
+taille_data_test = int(nbr_data_paquet * pourcentage_data_test)
+taille_data_evaluate = int(nbr_data_paquet * pourcentage_data_evaluate)
 
-target_train = [] 
-target_test = [] 
-target_evaluate = [] 
+# print("taille_data_train", taille_data_train)
+# print("taille_data_test", taille_data_test)
+# print("taille_data_evaluate", taille_data_evaluate)
 
-for i in range (int(data_size * pourcentage_data_train)) :
-    res = getData(29,28)
-    data_train.append(res[0])
-    target_train.append(res[1])
+data_train = data[:taille_data_train] 
+data_test = data[taille_data_train:taille_data_train+taille_data_test] 
+data_evaluate = data[taille_data_evaluate:] 
 
-for i in range (int(data_size * pourcentage_data_test)) :
-    res = getData(29,28)
-    data_test.append(res[0])
-    target_test.append(res[1])
 
-for i in range (int(data_size * pourcentage_data_evaluate)) :
-    res = getData(29,28)
-    data_evaluate.append(res[0])
-    target_evaluate.append(res[1])
+target_train = target[:taille_data_train] 
+target_test = target[taille_data_train:taille_data_train+taille_data_test] 
+target_evaluate = target[taille_data_evaluate:] 
+# print(target_train.shape)
+# print(target_test.shape)
+# print(target_evaluate.shape)
+
+# for i in range (int(data_size * pourcentage_data_train)) :
+#     res = getData(size_past + 1)
+#     data_train.append(res[0])
+#     target_train.append(res[1])
+
+# for i in range (int(data_size * pourcentage_data_test)) :
+#     res = getData(size_past + 1)
+#     data_test.append(res[0])
+#     target_test.append(res[1])
+
+# for i in range (int(data_size * pourcentage_data_evaluate)) :
+#     res = getData(size_past + 1)
+#     data_evaluate.append(res[0])
+#     target_evaluate.append(res[1])
 
 data_train = np.array(data_train)
 data_test = np.array(data_test)
@@ -125,20 +197,20 @@ target_test = np.array(target_test)
 target_evaluate = np.array(target_evaluate)
 
 
-latent_dim = 28
+latent_dim = 1
 
 # Encodeur
-inputs = keras.Input(shape=(28, 28))
+inputs = keras.Input(shape=(size_past))
 x = layers.Flatten()(inputs)
 x = layers.Dense(256, activation="sigmoid")(x)
 x = layers.Dense(128, activation="sigmoid")(x)
 x = layers.Dense(64, activation="sigmoid")(x)
-x = layers.Dense(latent_dim, activation="sigmoid")(x)  
+x = layers.Dense(latent_dim, activation="linear")(x)  
 encoder = keras.Model(inputs, x, name="encoder")
 
 # decoder.summary()
 
-inputs = keras.Input(shape=(28,28))
+inputs = keras.Input(shape=(size_past))
 
 latents = encoder(inputs)
 
@@ -182,33 +254,82 @@ plt.show()
 
 
 # Ensuite, vous pouvez passer l'image redimensionnée à votre modèle
-print(data_test[0].reshape(1,28,28))
-res = ae.predict(data_test[0].reshape(1,28,28))
+rand = random.randint(0,taille_data_evaluate-1)
+newDataValue = data_evaluate[rand]
+newDataValue = np.array(newDataValue)
+
+newTargetValue = target_evaluate[rand]
+newTargetValue = np.array(newTargetValue)
+
+res = ae.predict(newDataValue.reshape(1,size_past))
 res = res[0]
-
-plt.subplot(2, 1, 1)  # 2 lignes, 1 colonne, première sous-fenêtre
-plt.imshow(data_test[0:1][0])
-# plt.show()
-
-plt.subplot(2, 1, 2)  # 2 lignes, 1 colonne, première sous-fenêtre
-plt.imshow(res.reshape(1,28))
-
-
-res = ae.predict(data_evaluate)
-
+print(res)
 res = np.array(res)
-target_evaluate = target_evaluate.astype(np.float32)
-res = res.astype(np.float32)
 
-print(res.shape)
-print(target_evaluate.shape)
 
-print("------------")
-print(res[0])
-print(target_evaluate[0])
+# Créez une figure et un axe
+fig, ax = plt.subplots()
 
-plt.tight_layout()  # Pour éviter que les titres se chevauchent
+# Tracez les données passées en bleu sous forme de courbe
+ax.plot(range(0, size_past), newDataValue, label='Passé', color='blue', marker='o', markersize=6)
+
+# Tracez la prédiction future en rouge
+ax.plot(size_past, res, label='Futur_predict', color='red', marker='o', markersize=6)
+ax.plot(size_past, newTargetValue, label='Futur_real', color='green', marker='o', markersize=6)
+
+# Ajoutez une légende pour distinguer les courbes
+ax.legend()
+# Affichez le graphique
 plt.show()
+
+
+
+# data_evaluate_retrouver = [(x * std_de_base) + mean_de_base for x in data_evaluate]
+target_evaluate_retrouver = [(x * std_de_base) + mean_de_base for x in target_evaluate]
+
+predict = ae.predict(data_evaluate)
+predict = np.array(predict)
+predict = predict.ravel()
+
+predict = [(x * std_de_base) + mean_de_base for x in predict]
+
+target_evaluate_retrouver = np.array(target_evaluate_retrouver)
+predict = np.array(predict)
+
+
+diff = (predict - target_evaluate_retrouver) / predict *100
+
+plt.hist(diff)
+
+plt.show()
+
+moyenne = np.mean(diff)
+ecart_type = np.std(diff)
+
+print(f"Moyenne : {moyenne}")
+print(f"Écart-type : {ecart_type}")
+
+# plt.subplot(2, 1, 1)  # 2 lignes, 1 colonne, première sous-fenêtre
+# plt.imshow(data_test[0:1][0])
+# # plt.show()
+
+# plt.subplot(2, 1, 2)  # 2 lignes, 1 colonne, première sous-fenêtre
+# plt.imshow(res.reshape(1))
+
+
+# res = ae.predict(data_evaluate)
+
+# res = np.array(res)
+# target_evaluate = target_evaluate.astype(np.float32)
+# res = res.astype(np.float32)
+
+# print(res.shape)
+# print(target_evaluate.shape)
+
+# print("------------")
+# print(res[0])
+# print(target_evaluate[0])
+
 
 
 '''
