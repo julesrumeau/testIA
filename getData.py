@@ -73,7 +73,7 @@ pourcentage_data_evaluate =  0.1
 
 
 batch_size = 128
-epochs = 5000
+epochs = 10000
 
 # Définissez la date de début et la date de fin pour la période de 30 ans
 debut = "1993-01-01"
@@ -81,9 +81,11 @@ fin = "2023-01-01"
 
 # Utilisez la fonction Ticker pour obtenir les données du CAC 40 depuis Yahoo Finance
 cac40 = yf.Ticker("^FCHI")
+# cac40 = yf.Ticker("AAPL")
 
 # Obtenez les données historiques
 donnees_cac40 = cac40.history(period="30y", start=debut, end=fin)
+
 
 donnees_cac40 = donnees_cac40["Open"]
 donnees_cac40 = np.array(donnees_cac40)
@@ -108,11 +110,14 @@ data = data[:-1]
 nbr_data_paquet = len(data)
 print(nbr_data_paquet)
 
+
 target = []
+data2 = []
 for x in data :
     target.append(x[-1])
-    x.pop(size_past-1)
+    data2.append(x[:-1])
 
+data = data2
 data = np.array(data)
 target = np.array(target)
 
@@ -252,7 +257,6 @@ plt.title("Acc")
 plt.show()
 
 
-
 # Ensuite, vous pouvez passer l'image redimensionnée à votre modèle
 rand = random.randint(0,taille_data_evaluate-1)
 newDataValue = data_evaluate[rand]
@@ -280,34 +284,74 @@ ax.plot(size_past, newTargetValue, label='Futur_real', color='green', marker='o'
 # Ajoutez une légende pour distinguer les courbes
 ax.legend()
 # Affichez le graphique
-plt.show()
+
 
 
 
 # data_evaluate_retrouver = [(x * std_de_base) + mean_de_base for x in data_evaluate]
-target_evaluate_retrouver = [(x * std_de_base) + mean_de_base for x in target_evaluate]
+
 
 predict = ae.predict(data_evaluate)
 predict = np.array(predict)
 predict = predict.ravel()
 
+target_evaluate = [(x * std_de_base) + mean_de_base for x in target_evaluate]
+data_evaluate = [(x * std_de_base) + mean_de_base for x in data_evaluate]
 predict = [(x * std_de_base) + mean_de_base for x in predict]
 
-target_evaluate_retrouver = np.array(target_evaluate_retrouver)
+target_evaluate = np.array(target_evaluate)
 predict = np.array(predict)
 
 
-diff = (predict - target_evaluate_retrouver) / predict *100
+diff = (predict - target_evaluate) / predict *100
 
-plt.hist(diff)
 
-plt.show()
 
 moyenne = np.mean(diff)
 ecart_type = np.std(diff)
 
 print(f"Moyenne : {moyenne}")
 print(f"Écart-type : {ecart_type}")
+
+
+
+target_real_moins_1 = []
+
+for data in data_evaluate :
+    target_real_moins_1.append(data[-1])
+
+target_real_moins_1 = np.array(target_real_moins_1)
+
+# print(diff[rand])
+# print((target_real_moins_1[rand] - mean_de_base) / std_de_base)
+# print((target_evaluate[rand] - mean_de_base) / std_de_base)
+# print(target_evaluate[rand])
+# print(data_evaluate[rand][-1] == target_evaluate[rand])
+sell = []
+buy = []
+for i in range(0,len(target_real_moins_1)) :
+    if target_real_moins_1[i] >= target_evaluate[i] :
+        sell.append(diff[i])
+    else :
+        buy.append(diff[i])
+
+
+# print("sell", sell[rand])
+# print("buy", buy[rand])
+
+
+plt.show()
+
+
+plt.hist(diff)
+plt.show()
+
+plt.hist(sell)
+plt.title("sell")
+plt.show()
+plt.hist(buy)
+plt.title("buy")
+plt.show()
 
 # plt.subplot(2, 1, 1)  # 2 lignes, 1 colonne, première sous-fenêtre
 # plt.imshow(data_test[0:1][0])
